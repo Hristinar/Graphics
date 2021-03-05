@@ -114,24 +114,6 @@ namespace UnityEditor.Rendering.HighDefinition
             )
         );
 
-        public static readonly CED.IDrawer SectionRenderingSettings = CED.FoldoutGroup(
-            Styles.renderingSettingsHeaderContent,
-            Expandable.Rendering,
-            k_ExpandedState,
-            FoldoutOption.Indent,
-            CED.Group(
-                Drawer_Antialiasing,
-                Drawer_StopNaNs,
-                Drawer_Dithering,
-                Drawer_FieldCullingMask,
-                Drawer_FieldOcclusionCulling,
-                Drawer_FieldExposureTarget,
-                Drawer_AllowDynamicResolution,
-                Drawer_CameraWarnings,
-                Drawer_FieldRenderingPath
-            )
-        );
-
         public static readonly CED.IDrawer SectionEnvironmentSettings = CED.FoldoutGroup(
             Styles.environmentSettingsHeaderContent,
             Expandable.Environment,
@@ -158,6 +140,7 @@ namespace UnityEditor.Rendering.HighDefinition
                 Drawer_SectionMultiDisplay,
 #endif
                 Drawer_FieldRenderTarget,
+                Drawer_AllowDynamicResolution,
                 Drawer_FieldDepth,
                 Drawer_FieldNormalizedViewPort
             )
@@ -175,7 +158,7 @@ namespace UnityEditor.Rendering.HighDefinition
         public static readonly CED.IDrawer[] Inspector = new[]
         {
             SectionProjectionSettings,
-            SectionRenderingSettings,
+            Rendering.Drawer,
             SectionFrameSettings,
             SectionEnvironmentSettings,
             SectionOutputSettings,
@@ -189,11 +172,6 @@ namespace UnityEditor.Rendering.HighDefinition
         static void Drawer_FieldVolumeAnchorOverride(SerializedHDCamera p, Editor owner)
         {
             EditorGUILayout.PropertyField(p.volumeAnchorOverride, Styles.volumeAnchorOverrideContent);
-        }
-
-        static void Drawer_FieldCullingMask(SerializedHDCamera p, Editor owner)
-        {
-            EditorGUILayout.PropertyField(p.baseCameraSettings.cullingMask, Styles.cullingMaskContent);
         }
 
         static void Drawer_Projection(SerializedHDCamera p, Editor owner)
@@ -545,67 +523,10 @@ namespace UnityEditor.Rendering.HighDefinition
                 p.clearDepth.boolValue = true;
         }
 
-        static void Drawer_Antialiasing(SerializedHDCamera p, Editor owner)
-        {
-            Rect antiAliasingRect = EditorGUILayout.GetControlRect();
-            EditorGUI.BeginProperty(antiAliasingRect, Styles.antialiasingContent, p.antialiasing);
-            {
-                EditorGUI.BeginChangeCheck();
-                int selectedValue = EditorGUI.Popup(antiAliasingRect, Styles.antialiasingContent, p.antialiasing.intValue, Styles.antialiasingModeNames);
-                if (EditorGUI.EndChangeCheck())
-                    p.antialiasing.intValue = selectedValue;
-            }
-            EditorGUI.EndProperty();
-
-            if (p.antialiasing.intValue == (int)HDAdditionalCameraData.AntialiasingMode.SubpixelMorphologicalAntiAliasing)
-            {
-                EditorGUILayout.PropertyField(p.SMAAQuality, Styles.SMAAQualityPresetContent);
-            }
-            else if (p.antialiasing.intValue == (int)HDAdditionalCameraData.AntialiasingMode.TemporalAntialiasing)
-            {
-                EditorGUILayout.PropertyField(p.taaQualityLevel, Styles.TAAQualityLevelContent);
-
-                EditorGUI.indentLevel++;
-
-                EditorGUILayout.PropertyField(p.taaSharpenStrength, Styles.TAASharpenContent);
-
-                if (p.taaQualityLevel.intValue > (int)HDAdditionalCameraData.TAAQualityLevel.Low)
-                {
-                    EditorGUILayout.PropertyField(p.taaHistorySharpening, Styles.TAAHistorySharpening);
-                    EditorGUILayout.PropertyField(p.taaAntiFlicker, Styles.TAAAntiFlicker);
-                }
-
-                if (p.taaQualityLevel.intValue == (int)HDAdditionalCameraData.TAAQualityLevel.High)
-                {
-                    EditorGUILayout.PropertyField(p.taaMotionVectorRejection, Styles.TAAMotionVectorRejection);
-                    EditorGUILayout.PropertyField(p.taaAntiRinging, Styles.TAAAntiRingingContent);
-                }
-
-                EditorGUI.indentLevel--;
-            }
-        }
-
-        static void Drawer_Dithering(SerializedHDCamera p, Editor owner)
-        {
-            EditorGUILayout.PropertyField(p.dithering, Styles.ditheringContent);
-        }
-
-        static void Drawer_StopNaNs(SerializedHDCamera p, Editor owner)
-        {
-            EditorGUILayout.PropertyField(p.stopNaNs, Styles.stopNaNsContent);
-        }
-
         static void Drawer_AllowDynamicResolution(SerializedHDCamera p, Editor owner)
         {
             EditorGUILayout.PropertyField(p.allowDynamicResolution, Styles.allowDynResContent);
             p.baseCameraSettings.allowDynamicResolution.boolValue = p.allowDynamicResolution.boolValue;
-        }
-
-        static void Drawer_FieldRenderingPath(SerializedHDCamera p, Editor owner)
-        {
-            EditorGUILayout.PropertyField(p.passThrough, Styles.fullScreenPassthroughContent);
-            using (new EditorGUI.DisabledScope(p.passThrough.boolValue))
-                EditorGUILayout.PropertyField(p.customRenderingSettings, Styles.renderingPathContent);
         }
 
         static void Drawer_FieldRenderTarget(SerializedHDCamera p, Editor owner)
@@ -626,30 +547,12 @@ namespace UnityEditor.Rendering.HighDefinition
             }
         }
 
-        static void Drawer_FieldExposureTarget(SerializedHDCamera p, Editor owner)
-        {
-            EditorGUILayout.PropertyField(p.exposureTarget, Styles.exposureTargetContent);
-        }
-
-        static void Drawer_FieldOcclusionCulling(SerializedHDCamera p, Editor owner)
-        {
-            EditorGUILayout.PropertyField(p.baseCameraSettings.occlusionCulling, Styles.occlusionCullingContent);
-        }
-
-        static void Drawer_CameraWarnings(SerializedHDCamera p, Editor owner)
-        {
-            foreach (Camera camera in p.serializedObject.targetObjects)
-            {
-                var warnings = GetCameraBufferWarnings(camera);
-                if (warnings.Length > 0)
-                    EditorGUILayout.HelpBox(string.Join("\n\n", warnings), MessageType.Warning, true);
-            }
-        }
-
+#if ENABLE_VR && ENABLE_XR_MANAGEMENT
         static void Drawer_SectionXRRendering(SerializedHDCamera p, Editor owner)
         {
             EditorGUILayout.PropertyField(p.xrRendering, Styles.xrRenderingContent);
         }
+#endif
 
 #if ENABLE_MULTIPLE_DISPLAYS
         static void Drawer_SectionMultiDisplay(SerializedHDCamera p, Editor owner)
@@ -684,12 +587,6 @@ namespace UnityEditor.Rendering.HighDefinition
         static bool ModuleManager_ShouldShowMultiDisplayOption()
         {
             return (bool)k_ModuleManager_ShouldShowMultiDisplayOption.Invoke(null, null);
-        }
-
-        static readonly MethodInfo k_Camera_GetCameraBufferWarnings = typeof(Camera).GetMethod("GetCameraBufferWarnings", BindingFlags.Instance | BindingFlags.NonPublic);
-        static string[] GetCameraBufferWarnings(Camera camera)
-        {
-            return (string[])k_Camera_GetCameraBufferWarnings.Invoke(camera, null);
         }
     }
 }
