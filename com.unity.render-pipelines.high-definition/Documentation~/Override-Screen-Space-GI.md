@@ -31,7 +31,7 @@ The properties visible in the Inspector change depending on the option you selec
 
 - To use a screen-space, ray-marched global illumination solution, select **Ray Marching** and see [Screen-space](#screen-space) for the list of properties.
 - To use ray tracing, select **Ray Tracing** and see [Ray-traced](#ray-traced) for the list of properties.
-- To use a combination of ray tracing and ray marching to increase performance, select **Hybrid** and see [Ray-traced](#ray-traced) for the list of properties. This option uses ray tracing to include off-screen GameObjects in the global illumination. It also uses ray marching to include opaque particles and vertex animations in the global illumination. This option only works in [Performance mode](Ray-Tracing-Getting-Started.md#ray-tracint-mode)
+- To use a combination of ray tracing and ray marching, select **Hybrid** and see [Ray-traced](#ray-traced) for the list of properties. This option uses ray marching to intersect on-screen geometry and uses ray tracing to intersect off-screen geometry. This enables HDRP to include on-screen opaque particles, vertex animations, and decals when it calculates global illumination. This option only works in [Performance mode](Ray-Tracing-Getting-Started.md#ray-tracint-mode).<br/>**Note**: HDRP uses ray tracing for any geometry inside the ray tracing acceleration structure regardless of whether vertex animation or decals modify the geometry's surface. This means if it fails to intersect the on-screen deformed geometry, it intersects the original mesh inside in the ray tracing acceleration structure. This may cause visual discrepancies between what you see and what you expect.
 
 ### Screen-space
 
