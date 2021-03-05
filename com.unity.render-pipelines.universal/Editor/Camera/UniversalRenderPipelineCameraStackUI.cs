@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEditorInternal;
 using UnityEngine;
@@ -12,6 +11,7 @@ namespace UnityEditor.Rendering.Universal
 {
     internal class UniversalRenderPipelineCameraStackUI
     {
+        // This is the valid list of types, so if we need to add more types we just add it here
         static readonly List<CameraRenderType> s_ValidCameraTypes = new List<CameraRenderType>
         {
             CameraRenderType.Overlay
@@ -57,7 +57,7 @@ namespace UnityEditor.Rendering.Universal
         {
             get
             {
-                if (index < 0 || index > m_SerializedCamera.cameras.arraySize - 1)
+                if (index < 0 || index >= m_SerializedCamera.cameras.arraySize)
                     return null;
 
                 // Return the camera on that index
@@ -77,7 +77,7 @@ namespace UnityEditor.Rendering.Universal
             m_SerializedCamera.cameras.DeleteArrayElementAtIndex(selectedIndex);
         }
 
-        void RemoveCameraFromList(ReorderableList list)
+        void RemoveSelectedCamerasFromList(ReorderableList list)
         {
             var selectedIndices = list.selectedIndices;
 
@@ -98,7 +98,7 @@ namespace UnityEditor.Rendering.Universal
 
         List<Camera> availableCamerasToAdd { get; } = new List<Camera>();
 
-        void AddCameraToCameraList(Rect rect, ReorderableList list)
+        void ShowCustomMenuWithAvailableCamerasToAdd(Rect rect, ReorderableList list)
         {
             // Need to do clear the list here otherwise the menu just fills up with more and more entries
             availableCamerasToAdd.Clear();
@@ -122,10 +122,10 @@ namespace UnityEditor.Rendering.Universal
                     .ToArray()
                 : Styles.camerasToAddNotFound;
 
-            EditorUtility.DisplayCustomMenu(rect, names, -1, AddCameraToCameraListMenuSelected, null);
+            EditorUtility.DisplayCustomMenu(rect, names, -1, AddSelectedCameraFromCustomMenu, null);
         }
 
-        void AddCameraToCameraListMenuSelected(object userData, string[] options, int selected)
+        void AddSelectedCameraFromCustomMenu(object userData, string[] options, int selected)
         {
             if (!availableCamerasToAdd.Any())
                 return;
@@ -244,8 +244,8 @@ namespace UnityEditor.Rendering.Universal
             m_LayerList = new ReorderableList(m_SerializedCamera.serializedObject, m_SerializedCamera.cameras, true, false, true, true);
             m_LayerList.drawElementCallback += DrawElementCallback;
             m_LayerList.onSelectCallback += SelectElement;
-            m_LayerList.onRemoveCallback = RemoveCameraFromList;
-            m_LayerList.onAddDropdownCallback = AddCameraToCameraList;
+            m_LayerList.onRemoveCallback = RemoveSelectedCamerasFromList;
+            m_LayerList.onAddDropdownCallback = ShowCustomMenuWithAvailableCamerasToAdd;
             m_LayerList.onCanRemoveCallback = CanRemove;
         }
 
