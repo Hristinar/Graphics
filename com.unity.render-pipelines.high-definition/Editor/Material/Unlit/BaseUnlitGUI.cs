@@ -226,9 +226,7 @@ namespace UnityEditor.Rendering.HighDefinition
                 MaterialEditor.FixupEmissiveFlag(material);
             }
 
-            // Commented out for now because unfortunately we used the hard coded property names used by the GI system for our own parameters
-            // So we need a way to work around that before we activate this.
-            material.SetupMainTexForAlphaTestGI("_EmissiveColorMap", "_EmissiveColor");
+            material.SetupMainTexForAlphaTestGI("_UnlitColorMap", "_UnlitColor");
 
             // depth offset for ShaderGraphs (they don't have the displacement mode property)
             if (!material.HasProperty(kDisplacementMode) && material.HasProperty(kDepthOffsetEnable))
